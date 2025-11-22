@@ -1,0 +1,85 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  role      String   @default("FACULTY") // FACULTY, MODERATOR, EXAM_CELL, ADMIN
+  lastLogin DateTime?
+  createdAt DateTime @default(now())
+  
+  questions Question[]
+  papers    QuestionPaper[]
+  logs      AuditLog[]
+}
+
+model Question {
+  id          Int      @id @default(autoincrement())
+  text        String
+  options     String   // JSON string of options
+  answer      String
+  subject     String
+  difficulty  String
+  image       String?
+  status      String   @default("ACTIVE")
+  usageCount  Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  createdById Int
+  createdBy   User @relation(fields: [createdById], references: [id])
+  
+  papers      QuestionPaperQuestion[]
+}
+
+model QuestionPaper {
+  id          Int      @id @default(autoincrement())
+  title       String
+  status      String   @default("DRAFT") // DRAFT, SUBMITTED, APPROVED, ASSIGNED, REJECTED
+  comments    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  createdById Int
+  createdBy   User @relation(fields: [createdById], references: [id])
+  
+  questions   QuestionPaperQuestion[]
+  exams       Exam[]
+}
+
+model QuestionPaperQuestion {
+  paperId    Int
+  questionId Int
+  paper      QuestionPaper @relation(fields: [paperId], references: [id])
+  question   Question      @relation(fields: [questionId], references: [id])
+
+  @@id([paperId, questionId])
+}
+
+model Exam {
+  id        Int      @id @default(autoincrement())
+  name      String
+  date      DateTime
+  type      String
+  createdAt DateTime @default(now())
+  
+  paperId   Int?
+  paper     QuestionPaper? @relation(fields: [paperId], references: [id])
+}
+
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  action    String
+  details   String?
+  timestamp DateTime @default(now())
+  
+  userId    Int
+  user      User @relation(fields: [userId], references: [id])
+}
