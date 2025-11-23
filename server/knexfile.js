@@ -5,5 +5,10 @@ module.exports = {
             filename: './dev.sqlite3'
         },
         useNullAsDefault: true
+    },
+    production: {
+        client: 'pg',
+        connection: process.env.DATABASE_URL,
+        ssl: { rejectUnauthorized: false }
     }
 };

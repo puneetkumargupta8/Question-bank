@@ -12,10 +12,23 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
+const path = require('path');
+
 // Basic health check
-app.get('/', (req, res) => {
+app.get('/health', (req, res) => {
     res.send('Examination Cell API is running');
 });
+
+// Serve static files in production
+if (process.env.NODE_ENV === 'production') {
+    app.use(express.static(path.join(__dirname, '../client/dist')));
+
+    app.get('*', (req, res) => {
+        // Don't intercept API routes
+        if (req.path.startsWith('/api')) return res.status(404).send('API not found');
+        res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+    });
+}
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));
